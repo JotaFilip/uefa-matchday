@@ -286,7 +286,8 @@ def process(comp: str, season: str) -> None:
     for name, path in mapping.items():
         if "espn_" in path and "espn_" not in existing.get(name, ""):
             mapping[name] = existing[name]
-    out.write_text(json.dumps(mapping, indent=2, ensure_ascii=False), encoding="utf-8")
+    out.write_text(json.dumps(mapping, indent=2, ensure_ascii=False,
+                              sort_keys=True) + "\n", encoding="utf-8")
     missing = [n for n in espn if n not in mapping]
     got = sum(1 for n in espn if n in mapping)
     print(f"\nDone: {got}/{len(espn)} teams ({len(mapping)} total) -> {out}")
