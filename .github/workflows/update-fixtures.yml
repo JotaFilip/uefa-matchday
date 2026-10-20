@@ -91,7 +91,8 @@ jobs:
           NL=$'\n\n'
           for n in champions_knockout champions_league europa_knockout \
                    europa_league conference_knockout conference_league; do
-            [ -f "standings/$SEASON/$n.png" ] || continue
-            NOTES="${NOTES}${NL}![]($BASE/$n.png)"
+            f="${n}_$SEASON.png" # build_standings.py names files <name>_<season>.png
+            [ -f "standings/$SEASON/$f" ] || continue
+            NOTES="${NOTES}${NL}![]($BASE/$f)"
           done
           gh release edit "$SEASON" --notes "$NOTES"
