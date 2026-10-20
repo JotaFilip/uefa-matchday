@@ -20,10 +20,10 @@ jobs:
           python3 -m pip install playwright
           sudo python3 -m playwright install --with-deps chromium
 
-      # No cache in the repo: full scan of the season window (~140 days per
-      # competition, a few hundred fast requests, ~4 min). Days without
-      # matches are re-checked every run, so knockout fixtures appear as
-      # soon as ESPN publishes them after the draw. Rebuilds all
+      # No fixtures cache in the repo: full scan of the season window
+      # (~140 days per competition, a few hundred fast requests, ~4 min).
+      # Days without matches are re-checked every run, so knockout fixtures
+      # appear as soon as ESPN publishes them after the draw. Rebuilds all
       # competitions.
       - name: Fetch fixtures and rebuild pages
         run: python3 fetch_fixtures.py --image
