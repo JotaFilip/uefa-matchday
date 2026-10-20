@@ -49,10 +49,10 @@ def main() -> None:
         common.append(f"--competition={args.competition}")
     if args.season:
         common.append(f"--season={args.season}")
-    if args.league_only:
-        common.append("--league-only")
 
-    fetch_args = common
+    fetch_args = list(common)
+    if args.league_only:
+        fetch_args.append("--league-only")
     if args.no_cache:
         fetch_args.append("--no-cache")
     if args.update:
@@ -62,6 +62,8 @@ def main() -> None:
     run("fetch_logos.py", common)
 
     build_args = list(common)
+    if args.league_only:
+        build_args.append("--league-only")
     if args.image:
         build_args.append("--image")
     run("build_standings.py", build_args)
