@@ -97,9 +97,8 @@ jobs:
           # browser — plain asset links force a download
           BASE="https://github.com/$GITHUB_REPOSITORY/releases/download/$SEASON"
           NOTES="UEFA $SEASON standings — updated daily while the season is live."
+          NL=$'\n\n'
           for f in standings/"$SEASON"/*.png; do
-            NOTES="$NOTES
-
-![]($BASE/$(basename "$f"))"
+            NOTES="${NOTES}${NL}![]($BASE/$(basename "$f"))"
           done
           gh release edit "$SEASON" --notes "$NOTES"
