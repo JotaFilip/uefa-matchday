@@ -2,9 +2,9 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# cache/ stays local only: the daily GitHub Actions job does a full scan
-# (no cache on the runner); the local cache keeps re-runs instant.
-cache/
+# fixtures/ stays local only: the daily GitHub Actions job does a full scan
+# (no fixtures cache on the runner); the local cache keeps re-runs instant.
+fixtures/
 
 # logo PNGs stay local; only the team_logos.json mapping is committed
 logos/*

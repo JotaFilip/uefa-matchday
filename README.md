@@ -31,7 +31,7 @@ python3 fetch_fixtures.py --season 2026
 python3 fetch_fixtures.py --image
 
 # Options
-python3 fetch_fixtures.py --out output/custom    # custom output base path
+python3 fetch_fixtures.py --out standings/custom # custom output base path
 python3 fetch_fixtures.py --league-only              # skip knockout rounds
 python3 fetch_fixtures.py --no-cache                 # re-fetch from ESPN
 ```
@@ -48,13 +48,13 @@ python3 fetch_fixtures.py --update
 python3 fetch_fixtures.py --competition europa --update
 ```
 
-Generated files land in `output/<season>/` (one sub-folder per season, named
-after the start year), one file per phase — each also gets a `.png` with
-`--image`:
+Generated files land in `standings/<season>/` (one sub-folder per season,
+named after the start year), one file per phase — each also gets a `.png`
+with `--image`:
 
-- `output/2026/champions_league_2026.html` + `champions_knockout_2026.html`
-- `output/2026/europa_league_2026.html` + `europa_knockout_2026.html`
-- `output/2026/conference_league_2026.html` + `conference_knockout_2026.html`
+- `standings/2026/champions_league_2026.html` + `champions_knockout_2026.html`
+- `standings/2026/europa_league_2026.html` + `europa_knockout_2026.html`
+- `standings/2026/conference_league_2026.html` + `conference_knockout_2026.html`
 
 ### Refreshing club badges
 
@@ -64,12 +64,12 @@ python3 fetch_logos.py --competition champions  # a single competition
 python3 fetch_logos.py --season 2025            # badges for a past season
 ```
 
-Downloads 64×64 badges from football-logos.cc into `logos/` and merges them
-into `team_logos.json` (ESPN team name → badge path). The site only lists the
-current season's teams, so clubs from past seasons (e.g. `--season 2025`) get
-badges from ESPN's logo CDN instead, stored in `logos/espn/`. If a badge is
-missing, the fixtures script falls back to ESPN's logos; with no mapping at
-all it falls back to plain team names.
+Downloads badges from football-logos.cc into `logos/` and merges them into
+`team_logos.json` (ESPN team name → badge path). Clubs in the site's
+current-season list are matched by name; clubs missing from that list (e.g.
+past seasons' smaller clubs) are looked up in the site-wide search index;
+anything still unmatched gets a badge from ESPN's logo CDN (`logos/espn/`).
+With no mapping at all the fixtures script falls back to plain team names.
 
 ## Folder layout
 
@@ -77,10 +77,10 @@ all it falls back to plain team names.
 |---|---|
 | `fetch_fixtures.py` | Fetches fixtures, builds the matrix, renders HTML/PNG |
 | `fetch_logos.py` | Downloads club badges, matches team names |
-| `cache/<competition>-<season>/` | Cached ESPN scoreboard responses (`espn_YYYYMMDD.json`) — re-runs are instant |
+| `fixtures/<competition>-<season>/` | Cached ESPN scoreboard responses (`espn_YYYYMMDD.json`) — re-runs are instant |
 | `logos/` | Badge PNGs from football-logos.cc (shared across competitions) + `team_logos.json` |
 | `logos/espn/` | ESPN fallback badges (`espn_<id>.png`) — created on demand only |
-| `output/<season>/` | Generated HTML pages and PNGs, one sub-folder per season |
+| `standings/<season>/` | Generated HTML pages and PNGs, one sub-folder per season |
 
 ## Notes
 

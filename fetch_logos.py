@@ -5,7 +5,8 @@ football-logos.cc.
 Steps:
     1. Fetch the competition tournament page (lists all current teams with
        64x64 logo URLs).
-    2. Match site team names to the ESPN team names found in the fixtures cache.
+    2. Match site team names to the ESPN team names found in the fixtures/
+       folder; unmatched clubs are looked up in the site-wide search index.
     3. Download each badge to logos/{slug}.png (the asset CDN requires an
        Origin: https://football-logos.cc header).
     4. Merge into the shared logos/team_logos.json:
@@ -68,6 +69,13 @@ ALIASES = {
     "inter escaldes": "inter d escaldes",
     "universitatea craiova": "csu craiova",
     "crvena zvezda": "red star belgrade",
+    "legia warsaw": "legia warszawa",
+    # ESPN name -> site name (used when searching the site index)
+    "kobenhavn": "copenhagen",
+    "omonia nicosia": "omonoia nicosia",
+    "sparta prague": "sparta praha",
+    "red star belgrade": "crvena zvezda",
+    "fcsb": "fc steaua bucuresti",
 }
 
 
@@ -113,6 +121,51 @@ def site_teams(comp: str) -> list[dict]:
     return teams
 
 
+def search_index() -> list[dict]:
+    """Site-wide logo index — the same data the on-site search box uses."""
+    data = fetch("https://football-logos.cc/ac-v2.json", PAGE_HEADERS)
+    return json.loads(data.decode("utf-8"))
+
+
+def search_team(name: str, index: list[dict]) -> dict | None:
+    """Find a club in the site index by ESPN name: exact normalized match
+    first (any alias variant), then the closest substring match
+    ('FC Noah' -> 'Noah', 'Drita Gjilan' -> 'Drita')."""
+    variants = alias_variants(normalize(name))
+    for it in index:
+        if it["categoryId"] != "tournaments" and normalize(it["name"]) in variants:
+            return it
+    cands = []
+    for it in index:
+        if it["categoryId"] == "tournaments":
+            continue
+        sn = normalize(it["name"])
+        for v in variants:
+            if len(sn) >= 4 and (sn in v or v in sn):
+                cands.append((abs(len(sn) - len(v)), it))
+                break
+    if cands:
+        cands.sort(key=lambda c: c[0])
+        return cands[0][1]
+    return None
+
+
+def team_page_asset(category: str, logo_id: str) -> str | None:
+    """Smallest badge asset URL listed on a club's page."""
+    url = f"https://football-logos.cc/{category}/{logo_id}/"
+    try:
+        html = fetch(url, PAGE_HEADERS).decode("utf-8", "replace")
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! team page fetch failed {url}: {e!r}")
+        return None
+    urls = re.findall(
+        r"(https://assets\.football-logos\.cc/logos/" + re.escape(category)
+        + r"/(\d+)x\2/" + re.escape(logo_id) + r"\.[0-9a-f]+\.png)", html)
+    if not urls:
+        return None
+    return min(urls, key=lambda u: int(u[1]))[0]
+
+
 def espn_teams(cache_dir: Path) -> dict[str, str]:
     """ESPN displayName -> ESPN logo URL, from the fixtures cache."""
     urls: dict[str, str] = {}
@@ -126,19 +179,22 @@ def espn_teams(cache_dir: Path) -> dict[str, str]:
     return urls
 
 
+def alias_variants(n: str) -> list[str]:
+    """n plus a variant with each alias applied once (no chaining)."""
+    return [n] + [re.sub(rf"\b{re.escape(k)}\b", v, n) for k, v in ALIASES.items()]
+
+
 def match_team(site_name: str, espn_norms: dict[str, str]) -> str | None:
     """Return ESPN displayName for a site team name, or None."""
-    n = normalize(site_name)
-    # word-boundary replace: "ofi" must not fire inside "sOFIa"
-    for k, v in ALIASES.items():
-        n = re.sub(rf"\b{re.escape(k)}\b", v, n)
-    for espn, en in espn_norms.items():
-        if n == en:
-            return espn
-    for espn, en in espn_norms.items():
-        a, b = sorted([n, en], key=len)
-        if len(a) >= 4 and a in b:
-            return espn
+    norm_to_name = {v: k for k, v in espn_norms.items()}
+    for variant in alias_variants(normalize(site_name)):
+        if variant in norm_to_name:
+            return norm_to_name[variant]
+    for variant in alias_variants(normalize(site_name)):
+        for espn, en in espn_norms.items():
+            a, b = sorted([variant, en], key=len)
+            if len(a) >= 4 and a in b:
+                return espn
     return None
 
 
@@ -158,7 +214,7 @@ def download(url: str, dest: Path, headers: dict) -> bool:
 def process(comp: str, season: str) -> None:
     """Download badges and merge into the shared team_logos.json."""
     logo_dir = ROOT / "logos"
-    cache_dir = ROOT / "cache" / f"{comp}-{season}"
+    cache_dir = ROOT / "fixtures" / f"{comp}-{season}"
     logo_dir.mkdir(parents=True, exist_ok=True)
     print(f"Fetching {comp} team list from football-logos.cc ...")
     teams = site_teams(comp)
@@ -168,8 +224,11 @@ def process(comp: str, season: str) -> None:
 
     espn = espn_teams(cache_dir)
     if not espn:
-        sys.exit("No ESPN teams in cache — run fetch_fixtures.py first.")
+        sys.exit("No ESPN teams in fixtures folder — run fetch_fixtures.py first.")
     espn_norms = {name: normalize(name) for name in espn}
+
+    out = logo_dir / "team_logos.json"
+    existing = json.loads(out.read_text(encoding="utf-8")) if out.exists() else {}
 
     mapping: dict[str, str] = {}
     used: set[str] = set()
@@ -187,7 +246,30 @@ def process(comp: str, season: str) -> None:
         print(f"  ok  {espn_name:25} <- {t['slug']}.png")
         time.sleep(0.1)
 
-    # Fallback: ESPN logo CDN for teams the site list didn't cover
+    # Fallback: site-wide search (ac-v2.json index) for clubs missing from
+    # the current-season list — e.g. past seasons' smaller clubs
+    unmapped = [n for n in espn
+                if n not in mapping and "espn_" not in existing.get(n, "")]
+    if unmapped:
+        print(f"Searching site index for {len(unmapped)} unmatched team(s) ...")
+        index = search_index()
+        for espn_name in unmapped:
+            it = search_team(espn_name, index)
+            if not it:
+                print(f"  ? no site match for {espn_name!r}")
+                continue
+            asset = team_page_asset(it["categoryId"], it["id"])
+            if not asset:
+                continue
+            dest = logo_dir / f"{it['id']}.png"
+            if not dest.exists() and not download(asset, dest, ASSET_HEADERS):
+                print(f"  ! logo download failed for {it['name']}")
+                continue
+            mapping[espn_name] = f"logos/{it['id']}.png"
+            print(f"  ok  {espn_name:25} <- {it['id']}.png (search)")
+            time.sleep(0.1)
+
+    # Fallback: ESPN logo CDN for teams the site didn't cover at all
     espn_dir = logo_dir / "espn"
     espn_dir.mkdir(parents=True, exist_ok=True)
     for espn_name, url in espn.items():
@@ -199,8 +281,6 @@ def process(comp: str, season: str) -> None:
             mapping[espn_name] = f"logos/espn/espn_{tid}.png"
             print(f"  ok  {espn_name:25} <- espn/espn_{tid}.png (ESPN fallback)")
 
-    out = logo_dir / "team_logos.json"
-    existing = json.loads(out.read_text(encoding="utf-8")) if out.exists() else {}
     mapping = {**existing, **mapping}
     # An ESPN fallback must not downgrade a badge the site already provided
     for name, path in mapping.items():

@@ -6,7 +6,7 @@ Usage:
     python3 fetch_fixtures.py                  # all competitions, auto-detect season
     python3 fetch_fixtures.py --competition europa
     python3 fetch_fixtures.py --season 2026    # explicit season (start year)
-    python3 fetch_fixtures.py --out output/custom  # custom output base path
+    python3 fetch_fixtures.py --out standings/custom  # custom output base path
     python3 fetch_fixtures.py --league-only    # skip knockout rounds
     python3 fetch_fixtures.py --no-cache       # ignore cached responses
     python3 fetch_fixtures.py --update         # quick refresh of recent scores
@@ -16,13 +16,13 @@ How it works:
     ESPN's scoreboard API only serves one date per request, so the script
     scans every Tue/Wed/Thu (UCL match days) across the season window plus
     late-May/early-June Saturdays (the final). Raw responses are cached in
-    ./cache/<competition>-<season>/ so re-runs are instant. Days with no
+    ./fixtures/<competition>-<season>/ so re-runs are instant. Days with no
     matches are NOT cached — they are re-checked every run until fixtures
     appear (e.g. knockout dates after the draw).
 
-Output (two files per competition in output/<season>/, e.g.
-    output/2026/champions_league_2026.html and
-    output/2026/champions_knockout_2026.html):
+Output (two files per competition in standings/<season>/, e.g.
+    standings/2026/champions_league_2026.html and
+    standings/2026/champions_knockout_2026.html):
     - League phase matrix: one row per team, one column per matchday.
       Cells: `vs X` = home, `@ X` = away, number = final score (row team first).
       Matchday dates, result tints (win/draw/loss).
@@ -630,7 +630,7 @@ def process(competition: str, season: str, args) -> None:
     """Fetch/build/render one competition's matrix."""
     cfg = COMPETITIONS[competition]
     print(f"{'Updating' if args.update else 'Scanning'} {cfg['title']} fixtures for season {season} ...")
-    cache_dir = ROOT / "cache" / f"{competition}-{season}"
+    cache_dir = ROOT / "fixtures" / f"{competition}-{season}"
     fixtures = collect_fixtures(season, cfg["espn"], cache_dir,
                                 use_cache=not args.no_cache, league_only=args.league_only,
                                 update=args.update)
@@ -647,7 +647,7 @@ def process(competition: str, season: str, args) -> None:
     if logo_map:
         print(f"Using {len(logo_map)} club badges from {logo_file}")
 
-    base = Path(args.out) if args.out else ROOT / "output" / str(season) / cfg["out"]
+    base = Path(args.out) if args.out else ROOT / "standings" / str(season) / cfg["out"]
     if base.suffix in (".html", ".md", ".png"):
         base = base.with_suffix("")
     base.parent.mkdir(parents=True, exist_ok=True)
