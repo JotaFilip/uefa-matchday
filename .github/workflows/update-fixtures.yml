@@ -1,0 +1,41 @@
+name: Daily fixture update
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # midnight UTC, after UCL matchdays are finished
+  workflow_dispatch: # manual trigger from the Actions tab
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright + Chromium (for PNG renders)
+        run: |
+          python3 -m pip install playwright
+          sudo python3 -m playwright install --with-deps chromium
+
+      # No cache in the repo: full scan of the season window (~140 days per
+      # competition, a few hundred fast requests, ~4 min). Days without
+      # matches are re-checked every run, so knockout fixtures appear as
+      # soon as ESPN publishes them after the draw. Rebuilds all
+      # competitions.
+      - name: Fetch fixtures and rebuild pages
+        run: python3 fetch_fixtures.py --image
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update fixtures and results ($(date -u +%F))"
+            git push
+          fi
