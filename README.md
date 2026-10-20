@@ -18,25 +18,23 @@ HTML page (optionally a shareable PNG).
 Three scripts, one job each: fetch fixtures, fetch badges, build the pages.
 
 ```bash
-# 1. Fetch fixtures into the local cache (all competitions, auto season)
-python3 fetch_fixtures.py
+# Simple option: run everything in order
+python3 run.py
+python3 run.py --season 2026
+python3 run.py --competition europa
+python3 run.py --image
+python3 run.py --update
 
-# A single competition / explicit season (start year)
-python3 fetch_fixtures.py --competition champions
-python3 fetch_fixtures.py --season 2026
-
-# 2. Fetch club badges
-python3 fetch_logos.py
-
-# 3. Build the HTML pages (optionally also shareable PNGs)
-python3 build_standings.py
-python3 build_standings.py --image
+# Or run the three scripts individually
+python3 code/fetch_fixtures.py --season 2026
+python3 code/fetch_logos.py --season 2026
+python3 code/build_standings.py --season 2026
 
 # Options
-python3 fetch_fixtures.py --no-cache           # re-fetch every day (replace all fixtures)
-python3 fetch_fixtures.py --update             # refresh only days with unfinished matches
-python3 build_standings.py --out standings/custom  # custom output base path
-python3 build_standings.py --league-only       # skip the knockout bracket page
+python3 code/fetch_fixtures.py --no-cache           # re-fetch every day (replace all fixtures)
+python3 code/fetch_fixtures.py --update             # refresh only days with unfinished matches
+python3 code/build_standings.py --out standings/custom  # custom output base path
+python3 code/build_standings.py --league-only       # skip the knockout bracket page
 ```
 
 ### Updating scores
@@ -47,8 +45,8 @@ Days that are fully finished or still in the future are left untouched, so an
 update takes well under a second:
 
 ```bash
-python3 fetch_fixtures.py --update
-python3 build_standings.py
+python3 code/fetch_fixtures.py --update
+python3 code/build_standings.py
 ```
 
 Generated files land in `standings/<season>/` (one sub-folder per season,
@@ -71,9 +69,9 @@ that is updated daily while the season is live and freezes when it ends:
 ### Refreshing club badges
 
 ```bash
-python3 fetch_logos.py                          # all competitions
-python3 fetch_logos.py --competition champions  # a single competition
-python3 fetch_logos.py --season 2025            # badges for a past season
+python3 code/fetch_logos.py                          # all competitions
+python3 code/fetch_logos.py --competition champions  # a single competition
+python3 code/fetch_logos.py --season 2025            # badges for a past season
 ```
 
 Downloads badges from football-logos.cc into `logos/` and merges them into
@@ -87,9 +85,8 @@ With no mapping at all the fixtures script falls back to plain team names.
 
 | Path | Contents |
 |---|---|
-| `fetch_fixtures.py` | Fetches fixtures from ESPN into the local cache |
-| `fetch_logos.py` | Downloads club badges, matches team names |
-| `build_standings.py` | Builds the matrix + bracket HTML (and optional PNG) from the cache |
+| `run.py` | Runs the full pipeline: fetch fixtures → fetch badges → build pages |
+| `code/` | The three scripts: `fetch_fixtures.py` (ESPN → cache), `fetch_logos.py` (badges), `build_standings.py` (cache → HTML/PNG) |
 | `fixtures/<competition>-<season>/` | Cached ESPN scoreboard responses (`espn_YYYYMMDD.json`) — re-runs are instant |
 | `logos/` | Badge PNGs from football-logos.cc (shared across competitions) + `team_logos.json` |
 | `logos/espn/` | ESPN fallback badges (`espn_<id>.png`) — created on demand only |
@@ -110,5 +107,5 @@ With no mapping at all the fixtures script falls back to plain team names.
   QF → SF → final); two-leg ties show both leg scores plus the aggregate,
   and the winner of each tie (bold, green) feeds the next round.
   To see a finished knockout today:
-  `python3 fetch_fixtures.py --season 2025 --competition champions`
-  then `python3 build_standings.py --season 2025 --competition champions`
+  `python3 code/fetch_fixtures.py --season 2025 --competition champions` 
+  then `python3 code/build_standings.py --season 2025 --competition champions`

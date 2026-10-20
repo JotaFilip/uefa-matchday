@@ -33,7 +33,7 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 COMPETITIONS = {
     "champions": {"title": "UEFA Champions League", "out": "champions"},
     "europa": {"title": "UEFA Europa League", "out": "europa"},

@@ -36,7 +36,7 @@ import urllib.request
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 SCOREBOARD_URL = ("https://site.api.espn.com/apis/site/v2/sports/soccer/"
                   "{slug}/scoreboard?dates={d}")
 COMPETITIONS = {
@@ -184,8 +184,7 @@ def process(competition: str, season: str, args) -> None:
     if matches == 0:
         sys.exit(f"No {cfg['title']} fixtures found. Check network or try an explicit --season.")
     print(f"Done: {matches} matches cached -> {cache_dir.relative_to(ROOT)}/")
-    print(f"Next: python3 fetch_logos.py --season {season} "
-          f"&& python3 build_standings.py --season {season}")
+    print(f"Next: python3 run.py --season {season}")
 
 
 def main() -> None:
