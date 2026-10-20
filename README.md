@@ -15,37 +15,40 @@ HTML page (optionally a shareable PNG).
 
 ## Usage
 
+Three scripts, one job each: fetch fixtures, fetch badges, build the pages.
+
 ```bash
-# All competitions (default), auto-detects the current season
+# 1. Fetch fixtures into the local cache (all competitions, auto season)
 python3 fetch_fixtures.py
 
-# A single competition
+# A single competition / explicit season (start year)
 python3 fetch_fixtures.py --competition champions
-python3 fetch_fixtures.py --competition europa
-python3 fetch_fixtures.py --competition conference
-
-# Explicit season (start year)
 python3 fetch_fixtures.py --season 2026
 
-# Also write a shareable PNG next to the HTML
-python3 fetch_fixtures.py --image
+# 2. Fetch club badges
+python3 fetch_logos.py
+
+# 3. Build the HTML pages (optionally also shareable PNGs)
+python3 build_standings.py
+python3 build_standings.py --image
 
 # Options
-python3 fetch_fixtures.py --out standings/custom # custom output base path
-python3 fetch_fixtures.py --league-only              # skip knockout rounds
-python3 fetch_fixtures.py --no-cache                 # re-fetch every day (replace all fixtures)
+python3 fetch_fixtures.py --no-cache           # re-fetch every day (replace all fixtures)
+python3 fetch_fixtures.py --update             # refresh only days with unfinished matches
+python3 build_standings.py --out standings/custom  # custom output base path
+python3 build_standings.py --league-only       # skip the knockout bracket page
 ```
 
 ### Updating scores
 
-After a matchday, re-run with `--update` to refresh only the cached days that
-still have unfinished matches (e.g. today's games), then rebuild the table.
+After a matchday, re-run the fetch with `--update` to refresh only the cached
+days that still have unfinished matches (e.g. today's games), then rebuild.
 Days that are fully finished or still in the future are left untouched, so an
 update takes well under a second:
 
 ```bash
 python3 fetch_fixtures.py --update
-python3 fetch_fixtures.py --competition europa --update
+python3 build_standings.py
 ```
 
 Generated files land in `standings/<season>/` (one sub-folder per season,
@@ -84,8 +87,9 @@ With no mapping at all the fixtures script falls back to plain team names.
 
 | Path | Contents |
 |---|---|
-| `fetch_fixtures.py` | Fetches fixtures, builds the matrix, renders HTML/PNG |
+| `fetch_fixtures.py` | Fetches fixtures from ESPN into the local cache |
 | `fetch_logos.py` | Downloads club badges, matches team names |
+| `build_standings.py` | Builds the matrix + bracket HTML (and optional PNG) from the cache |
 | `fixtures/<competition>-<season>/` | Cached ESPN scoreboard responses (`espn_YYYYMMDD.json`) — re-runs are instant |
 | `logos/` | Badge PNGs from football-logos.cc (shared across competitions) + `team_logos.json` |
 | `logos/espn/` | ESPN fallback badges (`espn_<id>.png`) — created on demand only |
@@ -101,9 +105,10 @@ With no mapping at all the fixtures script falls back to plain team names.
   Conference League MD1 is 2026-10-15.
 - Knockout rounds: the knockout file stays empty until UEFA schedules them
   (the knockout draw happens after the league phase, which ends in January).
-  Once fixtures exist, a re-run or `--update` fills it. The knockout page
+  Once fixtures exist, a re-run of the fetch fills it. The knockout page
   renders a sideways bracket tree — one column per stage (playoffs → R16 →
   QF → SF → final); two-leg ties show both leg scores plus the aggregate,
   and the winner of each tie (bold, green) feeds the next round.
   To see a finished knockout today:
   `python3 fetch_fixtures.py --season 2025 --competition champions`
+  then `python3 build_standings.py --season 2025 --competition champions`
