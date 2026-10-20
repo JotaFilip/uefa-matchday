@@ -60,7 +60,7 @@ jobs:
       # One run: fetch new fixtures (cached days are instant), refresh badges,
       # build the HTML pages and render the PNGs.
       - name: Run pipeline (fetch, badges, build + PNGs)
-        run: python3 run.py --season "$SEASON" --update --image
+        run: python3 run.py --season "$SEASON" --image
 
       - name: Commit and push changes
         run: |
