@@ -68,6 +68,12 @@ latest version (the daily job overwrites the same file):
 - [Conference League 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/conference_league_2026.png)
 - [Conference knockout 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/conference_knockout_2026.png)
 
+The same images are also published to a per-season GitHub Release that is
+updated daily and freezes when the season ends:
+
+- [Season 2026 (live)](https://github.com/JotaFilip/uefa-matchday/releases/tag/2026)
+- [Season 2025 (final)](https://github.com/JotaFilip/uefa-matchday/releases/tag/2025)
+
 ### Refreshing club badges
 
 ```bash
