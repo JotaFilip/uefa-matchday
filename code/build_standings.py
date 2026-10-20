@@ -154,7 +154,6 @@ def cell_html(cell: dict, logo_map: dict, prefix: str = "") -> str:
 
 def _header_lines(season: str, title: str, phase: str) -> list[str]:
     return [f"# {title} {season}/{str(int(season) + 1)[2:]} — {phase}", "",
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}  ",
             "Source: ESPN public scoreboard API", ""]
 
 
@@ -367,9 +366,7 @@ def render_knockout_html(season: str, title: str, knockout: list[dict],
                 + "".join(rows_html) + "</div>")
 
     h1 = f"{title} {season}/{str(int(season) + 1)[2:]} — Knockout Phase"
-    meta = (f'<p class="meta">Generated: '
-            f'{datetime.now().strftime("%Y-%m-%d %H:%M")}  '
-            "Source: ESPN public scoreboard API</p>")
+    meta = '<p class="meta">Source: ESPN public scoreboard API</p>'
     legend = ('<p class="legend">Winner of each tie in bold (green). '
               "Numbers = leg scores (left to right), bold number = aggregate. "
               "<code>p</code> = tie decided on penalties; grey number = shootout score. "

@@ -57,19 +57,10 @@ jobs:
           # invoke the same interpreter pip installed into
           sudo "$(command -v python3)" -m playwright install --with-deps chromium
 
-      # Fetch fixtures (cached days are instant — only new dates and empty
-      # FUTURE days, re-checked so knockout fixtures appear as soon as ESPN
-      # publishes them after the draw, hit the API).
-      - name: Fetch fixtures
-        run: python3 code/fetch_fixtures.py --season "$SEASON"
-
-      # Badges for the PNG renders (fast when the logos cache is warm).
-      - name: Refresh club badges
-        run: python3 code/fetch_logos.py --season "$SEASON"
-
-      # Build the HTML pages from the cache and render the PNGs.
-      - name: Build pages and render PNGs
-        run: python3 code/build_standings.py --season "$SEASON" --image
+      # One run: fetch new fixtures (cached days are instant), refresh badges,
+      # build the HTML pages and render the PNGs.
+      - name: Run pipeline (fetch, badges, build + PNGs)
+        run: python3 run.py --season "$SEASON" --update --image
 
       - name: Commit and push changes
         run: |
