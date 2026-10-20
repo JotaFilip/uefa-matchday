@@ -86,7 +86,7 @@ def scan_dates(start: date, end: date):
 
 
 def fetch_day(day: date, espn_slug: str, cache_dir: Path, use_cache: bool = True) -> dict | None:
-    cache_dir.mkdir(exist_ok=True)
+    cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file = cache_dir / f"espn_{day.strftime('%Y%m%d')}.json"
     if use_cache and cache_file.exists():
         cached = json.loads(cache_file.read_text(encoding="utf-8"))
