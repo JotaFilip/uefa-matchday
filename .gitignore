@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# cache/ stays local only: the daily GitHub Actions job does a full scan
+# (no cache on the runner); the local cache keeps re-runs instant.
+cache/
+
+# logo PNGs stay local; only the team_logos.json mapping is committed
+logos/*
+!logos/team_logos.json
