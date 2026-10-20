@@ -4,12 +4,33 @@ on:
   schedule:
     - cron: "0 0 * * *" # midnight UTC, after UCL matchdays are finished
   workflow_dispatch: # manual trigger from the Actions tab
+    inputs:
+      season:
+        description: "Season start year to process (e.g. 2025). Empty = current season."
+        required: false
+        default: ""
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Season to process: manual runs can pass a year (e.g. to backfill a
+      # past season); empty = current season (Aug 1 – Jul 31 rule).
+      - name: Resolve season
+        run: |
+          SEASON="${{ github.event.inputs.season }}"
+          if [ -z "$SEASON" ]; then
+            M=$(date -u +%-m); Y=$(date -u +%Y)
+            if [ "$M" -ge 8 ]; then SEASON=$Y; else SEASON=$((Y-1)); fi
+          fi
+          case "$SEASON" in
+            [0-9][0-9][0-9][0-9]) ;;
+            *) echo "season must be empty or a 4-digit year, got: $SEASON"; exit 1;;
+          esac
+          echo "SEASON=$SEASON" >> "$GITHUB_ENV"
+          echo "Processing season $SEASON"
 
       # fixtures/ (small ESPN responses) and logos/ live in the Actions
       # cache, not the repo: cached days are instant, so each run only hits
@@ -36,14 +57,14 @@ jobs:
       # days without matches (re-checked so knockout fixtures appear as
       # soon as ESPN publishes them after the draw) hit the API.
       - name: Fetch fixtures
-        run: python3 fetch_fixtures.py
+        run: python3 fetch_fixtures.py --season "$SEASON"
 
       # Badges for the PNG renders (fast when the logos cache is warm).
       - name: Refresh club badges
-        run: python3 fetch_logos.py
+        run: python3 fetch_logos.py --season "$SEASON"
 
       - name: Rebuild pages and render PNGs
-        run: python3 fetch_fixtures.py --image
+        run: python3 fetch_fixtures.py --image --season "$SEASON"
 
       - name: Commit and push changes
         run: |
@@ -64,8 +85,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          M=$(date -u +%-m); Y=$(date -u +%Y)
-          if [ "$M" -ge 8 ]; then SEASON=$Y; else SEASON=$((Y-1)); fi
           gh release view "$SEASON" >/dev/null 2>&1 || \
             gh release create "$SEASON" --title "Season $SEASON" \
               --notes "UEFA $SEASON standings — updated daily while the season is live."
