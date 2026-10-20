@@ -98,8 +98,8 @@ jobs:
           BASE="https://github.com/$GITHUB_REPOSITORY/releases/download/$SEASON"
           NOTES="UEFA $SEASON standings — updated daily while the season is live."
           NL=$'\n\n'
-          for n in champions_league champions_knockout europa_league \
-                   europa_knockout conference_league conference_knockout; do
+          for n in champions_knockout champions_league europa_knockout \
+                   europa_league conference_knockout conference_league; do
             [ -f "standings/$SEASON/$n.png" ] || continue
             NOTES="${NOTES}${NL}![]($BASE/$n.png)"
           done
