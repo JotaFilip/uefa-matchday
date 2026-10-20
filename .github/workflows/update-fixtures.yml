@@ -29,7 +29,7 @@ jobs:
       - name: Install Playwright + Chromium (for PNG renders)
         run: |
           python3 -m pip install playwright
-          sudo python3 -m playwright install --with-deps chromium
+          sudo "$(python3 -c 'import sys; print(sys.executable)')" -m playwright install --with-deps chromium
 
       # Full scan of the season window, but with the cached fixtures every
       # day that already has a response is instant — only new dates and
