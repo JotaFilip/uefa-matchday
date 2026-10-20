@@ -11,6 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # fixtures/ (small ESPN responses) and logos/ live in the Actions
+      # cache, not the repo: cached days are instant, so each run only hits
+      # the API for new dates. Saved again at the end of the job.
+      - name: Restore fixtures + logos cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            fixtures/
+            logos/
+          key: uefa-cache-v1
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -20,12 +31,18 @@ jobs:
           python3 -m pip install playwright
           sudo python3 -m playwright install --with-deps chromium
 
-      # No fixtures cache in the repo: full scan of the season window
-      # (~140 days per competition, a few hundred fast requests, ~4 min).
-      # Days without matches are re-checked every run, so knockout fixtures
-      # appear as soon as ESPN publishes them after the draw. Rebuilds all
-      # competitions.
-      - name: Fetch fixtures and rebuild pages
+      # Full scan of the season window, but with the cached fixtures every
+      # day that already has a response is instant — only new dates and
+      # days without matches (re-checked so knockout fixtures appear as
+      # soon as ESPN publishes them after the draw) hit the API.
+      - name: Fetch fixtures
+        run: python3 fetch_fixtures.py
+
+      # Badges for the PNG renders (fast when the logos cache is warm).
+      - name: Refresh club badges
+        run: python3 fetch_logos.py
+
+      - name: Rebuild pages and render PNGs
         run: python3 fetch_fixtures.py --image
 
       - name: Commit and push changes

@@ -56,6 +56,18 @@ with `--image`:
 - `standings/2026/europa_league_2026.html` + `europa_knockout_2026.html`
 - `standings/2026/conference_league_2026.html` + `conference_knockout_2026.html`
 
+### Shareable links
+
+The PNGs are committed, so each has a permanent URL that always shows the
+latest version (the daily job overwrites the same file):
+
+- [Champions League 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/champions_league_2026.png)
+- [Champions knockout 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/champions_knockout_2026.png)
+- [Europa League 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/europa_league_2026.png)
+- [Europa knockout 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/europa_knockout_2026.png)
+- [Conference League 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/conference_league_2026.png)
+- [Conference knockout 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/conference_knockout_2026.png)
+
 ### Refreshing club badges
 
 ```bash
