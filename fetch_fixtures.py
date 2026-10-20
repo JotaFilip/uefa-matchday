@@ -8,7 +8,7 @@ Usage:
     python3 fetch_fixtures.py --season 2026    # explicit season (start year)
     python3 fetch_fixtures.py --out standings/custom  # custom output base path
     python3 fetch_fixtures.py --league-only    # skip knockout rounds
-    python3 fetch_fixtures.py --no-cache       # ignore cached responses
+    python3 fetch_fixtures.py --no-cache       # re-fetch every day (replace all fixtures)
     python3 fetch_fixtures.py --update         # quick refresh of recent scores
     python3 fetch_fixtures.py --image          # also save shareable PNG
 
@@ -16,9 +16,12 @@ How it works:
     ESPN's scoreboard API only serves one date per request, so the script
     scans every Tue/Wed/Thu (UCL match days) across the season window plus
     late-May/early-June Saturdays (the final). Raw responses are cached in
-    ./fixtures/<competition>-<season>/ so re-runs are instant. Days with no
-    matches are NOT cached — they are re-checked every run until fixtures
-    appear (e.g. knockout dates after the draw).
+    ./fixtures/<competition>-<season>/ so re-runs are instant: days with
+    matches are cached permanently, and empty PAST days are cached too (a
+    past day can never gain matches). Empty FUTURE days are re-checked
+    every run until fixtures appear (e.g. knockout dates after the draw).
+    --no-cache re-fetches every day (replace all fixtures); --update
+    re-fetches only cached days with unfinished matches.
 
 Output (two files per competition in standings/<season>/, e.g.
     standings/2026/champions_league_2026.html and
@@ -92,7 +95,9 @@ def fetch_day(day: date, espn_slug: str, cache_dir: Path, use_cache: bool = True
         cached = json.loads(cache_file.read_text(encoding="utf-8"))
         if cached.get("events"):
             return cached
-        cache_file.unlink()  # empty day: fixtures may have been published since
+        if day <= date.today():
+            return cached  # past empty day: stays empty, trust the marker
+        cache_file.unlink()  # future day: fixtures may have been published since
 
     url = SCOREBOARD_URL.format(slug=espn_slug, d=day.strftime("%Y%m%d"))
     req = urllib.request.Request(url, headers=HEADERS)
@@ -103,11 +108,17 @@ def fetch_day(day: date, espn_slug: str, cache_dir: Path, use_cache: bool = True
                 data = json.loads(resp.read().decode("utf-8"))
             if data.get("events"):
                 cache_file.write_text(json.dumps(data), encoding="utf-8")
+            elif day <= date.today():
+                # past day with no matches: cache the empty result so
+                # re-runs don't re-fetch it (force a re-fetch: --no-cache)
+                cache_file.write_text(json.dumps({"events": []}), encoding="utf-8")
             else:
-                cache_file.unlink(missing_ok=True)  # don't cache empty days
+                cache_file.unlink(missing_ok=True)  # future empty: re-check next run
             return data
         except urllib.error.HTTPError as e:
             if e.code == 404:
+                if day <= date.today():
+                    cache_file.write_text(json.dumps({"events": []}), encoding="utf-8")
                 return None  # no data for this date
             last_err = e
         except Exception as e:  # noqa: BLE001 - network hiccups
@@ -678,7 +689,8 @@ def main() -> None:
                     help="Output base path, writes <base>_league_<season>.html and "
                          "<base>_knockout_<season>.html (single competition only)")
     ap.add_argument("--league-only", action="store_true", help="Skip knockout rounds (faster)")
-    ap.add_argument("--no-cache", action="store_true", help="Re-fetch even if cached")
+    ap.add_argument("--no-cache", action="store_true",
+                    help="Ignore the cache and re-fetch every day (replace all fixtures)")
     ap.add_argument("--update", action="store_true",
                     help="Re-fetch only cached days whose matches are not all finished, then rebuild")
     ap.add_argument("--image", action="store_true",

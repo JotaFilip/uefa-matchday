@@ -59,8 +59,8 @@ jobs:
 
       # Full scan of the season window, but with the cached fixtures every
       # day that already has a response is instant — only new dates and
-      # days without matches (re-checked so knockout fixtures appear as
-      # soon as ESPN publishes them after the draw) hit the API.
+      # empty FUTURE days (re-checked so knockout fixtures appear as soon
+      # as ESPN publishes them after the draw) hit the API.
       - name: Fetch fixtures
         run: python3 fetch_fixtures.py --season "$SEASON"
 
