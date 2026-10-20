@@ -56,3 +56,17 @@ jobs:
             git commit -m "chore: update fixtures and results ($(date -u +%F))"
             git push
           fi
+
+      # One release per season: while the season is live the release is
+      # updated daily (same asset names, overwritten); in August a new
+      # season tag is created and the previous one freezes at the final.
+      - name: Publish PNGs to the season release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          M=$(date -u +%-m); Y=$(date -u +%Y)
+          if [ "$M" -ge 8 ]; then SEASON=$Y; else SEASON=$((Y-1)); fi
+          gh release view "$SEASON" >/dev/null 2>&1 || \
+            gh release create "$SEASON" --title "Season $SEASON" \
+              --notes "UEFA $SEASON standings — updated daily while the season is live."
+          gh release upload "$SEASON" standings/"$SEASON"/*.png --clobber
