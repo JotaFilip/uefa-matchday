@@ -98,7 +98,9 @@ jobs:
           BASE="https://github.com/$GITHUB_REPOSITORY/releases/download/$SEASON"
           NOTES="UEFA $SEASON standings — updated daily while the season is live."
           NL=$'\n\n'
-          for f in standings/"$SEASON"/*.png; do
-            NOTES="${NOTES}${NL}![]($BASE/$(basename "$f"))"
+          for n in champions_league champions_knockout europa_league \
+                   europa_knockout conference_league conference_knockout; do
+            [ -f "standings/$SEASON/$n.png" ] || continue
+            NOTES="${NOTES}${NL}![]($BASE/$n.png)"
           done
           gh release edit "$SEASON" --notes "$NOTES"
