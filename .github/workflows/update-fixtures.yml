@@ -91,6 +91,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view "$SEASON" >/dev/null 2>&1 || \
-            gh release create "$SEASON" --title "Season $SEASON" \
-              --notes "UEFA $SEASON standings — updated daily while the season is live."
+            gh release create "$SEASON" --title "Season $SEASON" --notes ""
           gh release upload "$SEASON" standings/"$SEASON"/*.png --clobber
+          # Embed the images in the release notes so they view inline in the
+          # browser — plain asset links force a download
+          BASE="https://github.com/$GITHUB_REPOSITORY/releases/download/$SEASON"
+          NOTES="UEFA $SEASON standings — updated daily while the season is live."
+          for f in standings/"$SEASON"/*.png; do
+            NOTES="$NOTES
+
+![]($BASE/$(basename "$f"))"
+          done
+          gh release edit "$SEASON" --notes "$NOTES"
