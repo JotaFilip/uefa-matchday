@@ -33,7 +33,7 @@ python3 fetch_fixtures.py --image
 # Options
 python3 fetch_fixtures.py --out standings/custom # custom output base path
 python3 fetch_fixtures.py --league-only              # skip knockout rounds
-python3 fetch_fixtures.py --no-cache                 # re-fetch from ESPN
+python3 fetch_fixtures.py --no-cache                 # re-fetch every day (replace all fixtures)
 ```
 
 ### Updating scores
@@ -49,8 +49,9 @@ python3 fetch_fixtures.py --competition europa --update
 ```
 
 Generated files land in `standings/<season>/` (one sub-folder per season,
-named after the start year), one file per phase — each also gets a `.png`
-with `--image`:
+named after the start year), one file per phase. Only the HTML pages are
+committed; with `--image` each also gets a `.png` (gitignored — the daily
+job uploads them to the season release instead):
 
 - `standings/2026/champions_league_2026.html` + `champions_knockout_2026.html`
 - `standings/2026/europa_league_2026.html` + `europa_knockout_2026.html`
@@ -58,18 +59,8 @@ with `--image`:
 
 ### Shareable links
 
-The PNGs are committed, so each has a permanent URL that always shows the
-latest version (the daily job overwrites the same file):
-
-- [Champions League 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/champions_league_2026.png)
-- [Champions knockout 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/champions_knockout_2026.png)
-- [Europa League 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/europa_league_2026.png)
-- [Europa knockout 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/europa_knockout_2026.png)
-- [Conference League 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/conference_league_2026.png)
-- [Conference knockout 2026](https://github.com/JotaFilip/uefa-matchday/raw/main/standings/2026/conference_knockout_2026.png)
-
-The same images are also published to a per-season GitHub Release that is
-updated daily and freezes when the season ends:
+PNGs are not committed — they're published to a per-season GitHub Release
+that is updated daily while the season is live and freezes when it ends:
 
 - [Season 2026 (live)](https://github.com/JotaFilip/uefa-matchday/releases/tag/2026)
 - [Season 2025 (final)](https://github.com/JotaFilip/uefa-matchday/releases/tag/2025)
@@ -98,7 +89,7 @@ With no mapping at all the fixtures script falls back to plain team names.
 | `fixtures/<competition>-<season>/` | Cached ESPN scoreboard responses (`espn_YYYYMMDD.json`) — re-runs are instant |
 | `logos/` | Badge PNGs from football-logos.cc (shared across competitions) + `team_logos.json` |
 | `logos/espn/` | ESPN fallback badges (`espn_<id>.png`) — created on demand only |
-| `standings/<season>/` | Generated HTML pages and PNGs, one sub-folder per season |
+| `standings/<season>/` | Generated HTML pages, one sub-folder per season (PNGs from `--image` are gitignored — published as release assets) |
 
 ## Notes
 

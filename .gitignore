@@ -9,3 +9,7 @@ fixtures/
 # logo PNGs stay local; only the team_logos.json mapping is committed
 logos/*
 !logos/team_logos.json
+
+# standings PNGs are not committed — the daily job uploads them to the
+# per-season GitHub Release instead
+standings/**/*.png
