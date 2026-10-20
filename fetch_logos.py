@@ -73,6 +73,7 @@ ALIASES = {
     # ESPN name -> site name (used when searching the site index)
     "kobenhavn": "copenhagen",
     "omonia nicosia": "omonoia nicosia",
+    "slavia prague": "slavia praha",
     "sparta prague": "sparta praha",
     "red star belgrade": "crvena zvezda",
     "fcsb": "fc steaua bucuresti",
